@@ -61,5 +61,5 @@ func RegisterWithLogger(r *require.Registry, loger logger.Logger){
 }
 
 func init() {
-	require.RegisterNativeModule(ModuleName, RequireWithLogger(logger.std.Logger))
+	require.RegisterNativeModule(ModuleName, RequireWithLogger(std_logger.Logger))
 }
