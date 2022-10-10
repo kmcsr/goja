@@ -16,10 +16,10 @@ import (
 
 	"golang.org/x/text/collate"
 
-	js_ast "github.com/dop251/goja/ast"
-	"github.com/dop251/goja/file"
-	"github.com/dop251/goja/parser"
-	"github.com/dop251/goja/unistring"
+	js_ast "github.com/kmcsr/goja/ast"
+	"github.com/kmcsr/goja/file"
+	"github.com/kmcsr/goja/parser"
+	"github.com/kmcsr/goja/unistring"
 )
 
 const (
@@ -183,6 +183,8 @@ type Runtime struct {
 	vm    *vm
 	hash  *maphash.Hash
 	idSeq uint64
+
+	*EventLoop
 
 	jobQueue []func()
 
@@ -463,6 +465,12 @@ func (r *Runtime) init() {
 		accessor:     true,
 		configurable: true,
 	})
+
+	r.EventLoop = newEventLoop(r)
+	r.Set("setTimeout", r.EventLoop.setTimeout1)
+	r.Set("setInterval", r.EventLoop.setInterval1)
+	r.Set("clearTimeout", r.EventLoop.clearTimeout)
+	r.Set("clearInterval", r.EventLoop.clearInterval)
 }
 
 func (r *Runtime) typeErrorResult(throw bool, args ...interface{}) {
@@ -1418,6 +1426,11 @@ func (r *Runtime) RunProgram(p *Program) (result Value, err error) {
 				}
 			} else {
 				panic(x)
+			}
+		}
+		if er, ok := err.(*Exception); ok && er != nil {
+			if r.Onerror != nil {
+				r.Onerror(er)
 			}
 		}
 	}()
@@ -2447,6 +2460,32 @@ func (r *Runtime) runWrapped(f func()) (err error) {
 		r.leave()
 	}
 	return
+}
+
+func (r *Runtime) Run(fn func(*Runtime)(error)) {
+	if fn != nil {
+		r.RunOnLoop(fn)
+	}
+	r.EventLoop.Run()
+}
+
+func (r *Runtime) RunOnLoop(fn func(*Runtime)(error)) {
+	if fn == nil {
+		panic("callback is nil")
+	}
+	r.DoSync(func()(error){ return fn(r) })
+}
+
+func (r *Runtime) SetTimeout(fn func(*Runtime)(error), timeout time.Duration) *Timer {
+	return r.setTimeout2(func()(error){
+		return fn(r)
+	}, timeout)
+}
+
+func (r *Runtime) SetInterval(fn func(*Runtime)(error), interval time.Duration) *Interval {
+	return r.setInterval2(func()(error){
+		return fn(r)
+	}, interval)
 }
 
 // IsUndefined returns true if the supplied Value is undefined. Note, it checks against the real undefined, not

@@ -1,6 +1,6 @@
 # file
 --
-    import "github.com/dop251/goja/file"
+    import "github.com/kmcsr/goja/file"
 
 Package file encapsulates the file abstractions used by the ast & parser.
 
@@ -20,19 +20,19 @@ type File struct {
 func NewFile(filename, src string, base int) *File
 ```
 
-#### func (*File) Base
+#### func (\*File) Base
 
 ```go
 func (fl *File) Base() int
 ```
 
-#### func (*File) Name
+#### func (\*File) Name
 
 ```go
 func (fl *File) Name() string
 ```
 
-#### func (*File) Source
+#### func (\*File) Source
 
 ```go
 func (fl *File) Source() string
@@ -47,7 +47,7 @@ type FileSet struct {
 
 A FileSet represents a set of source files.
 
-#### func (*FileSet) AddFile
+#### func (\*FileSet) AddFile
 
 ```go
 func (self *FileSet) AddFile(filename, src string) int
@@ -56,13 +56,13 @@ AddFile adds a new file with the given filename and src.
 
 This an internal method, but exported for cross-package use.
 
-#### func (*FileSet) File
+#### func (\*FileSet) File
 
 ```go
 func (self *FileSet) File(idx Idx) *File
 ```
 
-#### func (*FileSet) Position
+#### func (\*FileSet) Position
 
 ```go
 func (self *FileSet) Position(idx Idx) *Position
@@ -94,7 +94,7 @@ type Position struct {
 Position describes an arbitrary source position including the filename, line,
 and column location.
 
-#### func (*Position) String
+#### func (\*Position) String
 
 ```go
 func (self *Position) String() string

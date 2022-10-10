@@ -1,11 +1,11 @@
 # parser
 --
-    import "github.com/dop251/goja/parser"
+    import "github.com/kmcsr/goja/parser"
 
 Package parser implements a parser for JavaScript. Borrowed from https://github.com/robertkrimen/otto/tree/master/parser
 
     import (
-        "github.com/dop251/goja/parser"
+        "github.com/kmcsr/goja/parser"
     )
 
 Parse and return an AST
@@ -116,9 +116,9 @@ func (self Error) Error() string
 type ErrorList []*Error
 ```
 
-ErrorList is a list of *Errors.
+ErrorList is a list of \*Errors.
 
-#### func (*ErrorList) Add
+#### func (\*ErrorList) Add
 
 ```go
 func (self *ErrorList) Add(position file.Position, msg string)
@@ -152,7 +152,7 @@ func (self ErrorList) Len() int
 func (self ErrorList) Less(i, j int) bool
 ```
 
-#### func (*ErrorList) Reset
+#### func (\*ErrorList) Reset
 
 ```go
 func (self *ErrorList) Reset()
