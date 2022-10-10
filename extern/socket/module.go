@@ -117,12 +117,12 @@ func (m *Module)Listen(call goja.FunctionCall, runtime *goja.Runtime)(v goja.Val
 		network string
 		addr string
 	)
-	network = call.Arguments[0].Export().(string)
+	network = call.Argument(0).String()
 	if m.NetworkChecker != nil && !m.NetworkChecker(network, "listen") {
 		panic(runtime.ToValue(fmt.Errorf("Module not allowed listen network %q", network)))
 	}
-	if len(call.Arguments) >= 2 {
-		addr = call.Arguments[1].Export().(string)
+	if a := call.Argument(1); !goja.IsUndefined(a) {
+		addr = a.String()
 	}
 	if m.ListenerChecker != nil && !m.ListenerChecker(network, addr) {
 		panic(runtime.ToValue(fmt.Errorf("Module not allowed listen on %q with network %q", addr, network)))

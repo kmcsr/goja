@@ -12,14 +12,18 @@ import (
 
 const ModuleName = "node:console"
 
-type Console struct {
+type Module struct{
 	util   *goja.Object
-	logger logger.Logger
+	Logger logger.Logger
+}
+
+var Default = &Module{
+	Logger: std_logger.Logger,
 }
 
 type Function = func(call goja.FunctionCall, runtime *goja.Runtime)(goja.Value)
 
-func (c *Console)wrap(loger func(string))(Function){
+func (c *Module)wrap(loger func(string))(Function){
 	return func(call goja.FunctionCall, runtime *goja.Runtime)(goja.Value){
 		if formatter, ok := goja.AssertFunction(c.util.Get("format")); ok {
 			res, err := formatter(c.util, call.Arguments...)
@@ -34,22 +38,28 @@ func (c *Console)wrap(loger func(string))(Function){
 	}
 }
 
-func RequireWithLogger(loger logger.Logger)(require.ModuleLoader){
-	return func(runtime *goja.Runtime, module *goja.Object) {
-		c := &Console{
-			logger: loger,
-		}
-
+func (c *Module)Require(runtime *goja.Runtime, module *goja.Object){
+	if c.util == nil {
 		c.util = require.Require(runtime, util.ModuleName).(*goja.Object)
-
-		o := module.Get("exports").(*goja.Object)
-		o.Set("trace", c.wrap(func(v string){ c.logger.Trace(v) }))
-		o.Set("debug", c.wrap(func(v string){ c.logger.Debug(v) }))
-		o.Set("info",  c.wrap(func(v string){ c.logger.Info(v) }))
-		o.Set("warn",  c.wrap(func(v string){ c.logger.Warn(v) }))
-		o.Set("error", c.wrap(func(v string){ c.logger.Error(v) }))
-		o.Set("log", o.Get("info"))
 	}
+	o := module.Get("exports").(*goja.Object)
+	o.Set("trace", c.wrap(func(v string){ c.Logger.Trace(v) }))
+	o.Set("debug", c.wrap(func(v string){ c.Logger.Debug(v) }))
+	o.Set("info",  c.wrap(func(v string){ c.Logger.Info(v) }))
+	o.Set("warn",  c.wrap(func(v string){ c.Logger.Warn(v) }))
+	o.Set("error", c.wrap(func(v string){ c.Logger.Error(v) }))
+	o.Set("log", o.Get("info"))
+}
+
+func RequireWithLogger(loger logger.Logger)(require.ModuleLoader){
+	c := &Module{
+		Logger: loger,
+	}
+	return c.Require
+}
+
+func Require(runtime *goja.Runtime, module *goja.Object){
+	Default.Require(runtime, module)
 }
 
 func Enable(runtime *goja.Runtime) {
@@ -60,6 +70,6 @@ func RegisterWithLogger(r *require.Registry, loger logger.Logger){
 	r.RegisterNativeModule(ModuleName, RequireWithLogger(loger))
 }
 
-func init() {
-	require.RegisterNativeModule(ModuleName, RequireWithLogger(std_logger.Logger))
+func init(){
+	require.RegisterNativeModule(ModuleName, Require)
 }
